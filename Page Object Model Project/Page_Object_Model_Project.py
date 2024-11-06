@@ -1,32 +1,81 @@
-from ast import Import
+import unittest
 from selenium import webdriver
-import time
-from LoginClass import LoginPage
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import LoginClass
 
-# Import LoginPage class
-from Page_Object_Model_Project import LoginPage  # Adjust this import path as needed
+class TestLogin(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Initialize the WebDriver
+        cls.driver = webdriver.Chrome()  # Ensure ChromeDriver is in PATH or specify the path
+        cls.driver.implicitly_wait(10)  # Implicit wait to allow elements to load
 
-def test_login():
-    # Initialize the WebDriver
-    driver = webdriver.Chrome()  # Make sure ChromeDriver is in PATH or specify the path here
-    driver.get("https://apollo.zeuz.ai/Home/Login/")  # Open the login page
+    def test_valid_login(self):
+        # Open the login page
+        self.driver.get("https://apollo.zeuz.ai/Home/Login/")
+        
+        # Create an instance of LoginPage
+        login_page = LoginClass.LoginPage(self.driver)
 
-    # Create an instance of LoginPage with the driver
-    login_page = LoginPage(driver)
+        # Login credentials
+        username = "urbashi"  # Replace with actual username
+        password = "Silvy@apollo1"  # Replace with actual password
 
-    # Login credentials
-    username = "urbashi"  # Replace with actual username
-    password = "Silvy@apollo1"  # Replace with actual password
+        # Perform login action
+        login_page.login(username, password)
 
-    # Perform login action
-    login_page.login(username, password)
+        # Wait and verify login success
+        WebDriverWait(self.driver, 10).until(
+            EC.title_contains("Dashboard")  # Wait for the dashboard title
+        )
+        self.assertIn("Dashboard", self.driver.title)  # Check if the dashboard is displayed
 
-    # Optionally, you can add assertions here to verify login success, such as:
-    # assert "Dashboard" in driver.title  # or other verification logic
+    def test_invalid_login(self):
+        # Open the login page
+        self.driver.get("https://apollo.zeuz.ai/Home/Login/")
+        
+        # Create an instance of LoginPage
+        login_page = LoginClass.LoginPage(self.driver)
 
-    time.sleep(15)  # Pause to observe the result
-    #driver.quit()  # Close the browser
+        # Invalid login credentials
+        username = "urbashi"  # Replace with an invalid username
+        password = "invalid_"  # Replace with an invalid password
 
-# Run the test
+        # Perform login action
+        login_page.login(username, password)
+
+        # Verify error message
+        WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_element_located((By.ID, "alertify-logs"))  # Adjust as necessary
+        )
+        self.assertTrue(self.driver.find_element(By.ID, "alertify-logs").is_displayed())  # Check if error message is displayed
+    
+    def test_allspace_login(self):
+        # Open the login page
+        self.driver.get("https://apollo.zeuz.ai/Home/Login/")
+        
+        # Create an instance of LoginPage
+        login_page = LoginClass.LoginPage(self.driver)
+
+        # Invalid login credentials
+        username = "        "  # Replace with an invalid username
+        password = "        "  # Replace with an invalid password
+
+        # Perform login action
+        login_page.login(username, password)
+
+        # Verify error message
+        WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_element_located((By.ID, "alertify-logs"))  # Adjust as necessary
+        )
+        self.assertTrue(self.driver.find_element(By.ID, "alertify-logs").is_displayed())  # Check if error message is displayed
+
+    @classmethod
+    def tearDownClass(cls):
+        # Close the browser
+        cls.driver.quit()
+
 if __name__ == "__main__":
-    test_login()
+    unittest.main()
